@@ -18,11 +18,14 @@ var Engine = (function(global) {
      * create the canvas element, grab the 2D context for that canvas
      * set the canvas element's height/width and add it to the DOM.
      */
+    const centeringConstant  = 25;
     var doc = global.document,
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
-        lastTime;
+        lastTime,
+        allEnemies = [new Enemy(0, 2*83-centeringConstant, ctx), new Enemy(0, 3*83-centeringConstant, ctx)],
+        player = new Player(3*101, 4*83-centeringConstant, ctx);
 
     canvas.width = 505;
     canvas.height = 606;
@@ -93,7 +96,7 @@ var Engine = (function(global) {
         allEnemies.forEach(function(enemy) {
             enemy.update(dt);
         });
-        player.update();
+        player.update(ctx);
     }
 
     /* This function initially draws the "game level", it will then call
@@ -137,7 +140,6 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
         }
-
         renderEntities();
     }
 
