@@ -19,17 +19,24 @@ var Engine = (function(global) {
      * set the canvas element's height/width and add it to the DOM.
      */
     const centeringConstant  = 25;
+    const tileWidth = 101;
+    const tileHeight = 83;
+
     var doc = global.document,
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
         lastTime,
-        allEnemies = [new Enemy(0, 2*83-centeringConstant, ctx), new Enemy(0, 3*83-centeringConstant, ctx)],
-        player = new Player(3*101, 4*83-centeringConstant, ctx);
+        allEnemies = [new Enemy(0, 1*83-centeringConstant),
+            new Enemy(0, 2*83-centeringConstant),
+            new Enemy(0, 3*83-centeringConstant)],
+        player = new Player(3,5);
 
     canvas.width = 505;
     canvas.height = 606;
-    doc.body.appendChild(canvas);
+    doc.getElementById('canvas_container').appendChild(canvas);
+
+
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -61,14 +68,61 @@ var Engine = (function(global) {
         win.requestAnimationFrame(main);
     }
 
+    function startTimer() {
+        var countDownDate = new Date(new Date().getTime() + 1 * 60000);
+
+        // Update the count down every 1 second
+        var x = setInterval(function() {
+
+            // Get todays date and time
+            var now = new Date().getTime();
+                
+            // Find the distance between now and the count down date
+            var distance = countDownDate - now;
+                
+            // Time calculations for days, hours, minutes and seconds
+            // var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            // var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+            // Output the result in an element with id="demo"
+            document.getElementById("timer").innerHTML = minutes + "m " + seconds + "s ";
+                
+            // If the count down is over, write some text 
+            if (distance < 0) {
+                clearInterval(x);
+                document.getElementById("timer").innerHTML = "Game Over";
+                const gameOver = document.getElementsByClassName('game-over')[0];
+                if(gameOver.classList.contains('game-over')) {
+                    gameOver.classList.remove('game-over');
+                    const gameOverText = doc.getElementById('game_over_text');
+                    gameOverText.innerText = `Congratulations!! You won a minion's heart in ${player.steps} steps.`;
+                }
+            }
+        }, 1000);
+
+    }
+
     /* This function does some initial setup that should only occur once,
      * particularly setting the lastTime variable that is required for the
      * game loop.
      */
     function init() {
-        reset();
+        // reset();
         lastTime = Date.now();
-        main();
+        const minions = document.getElementsByClassName('minion');
+
+        for(const minion of minions) {
+            minion.onclick = function(event) {
+                //hide the overlay after selecting the player
+                doc.getElementsByClassName('overlay')[0].style.display = 'none';
+                player.sprite = event.target.getAttribute('src');
+                player.update();
+                main();
+                startTimer();
+            }
+        }
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -82,7 +136,18 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
+    }
+
+    function checkCollisions() {
+        allEnemies.forEach(function(enemy) {
+            if (enemy.x < player.playerXPos + player.width  && enemy.x + enemy.width  > player.playerXPos &&
+                enemy.y < player.playerYPos + player.height && enemy.y + enemy.height > player.playerYPos) {
+                enemy.update(0);
+                console.log('collision!!!');
+                player.resetOnCollision();
+            }
+        });
     }
 
     /* This is called by the update function and loops through all of the
@@ -137,7 +202,7 @@ var Engine = (function(global) {
                  * so that we get the benefits of caching these images, since
                  * we're using them over and over.
                  */
-                ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
+                ctx.drawImage(Resources.get(rowImages[row]), col * tileWidth, row * tileHeight);
             }
         }
         renderEntities();
@@ -162,8 +227,9 @@ var Engine = (function(global) {
      * handle game reset states - maybe a new game menu or a game over screen
      * those sorts of things. It's only called once by the init() method.
      */
-    function reset() {
+    doc.getElementById('reset_btn').onclick =  function(event) {
         // noop
+        location.reload();
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -175,7 +241,11 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/char-cat-girl.png',
+        'images/char-horn-girl.png',
+        'images/char-pink-girl.png',
+        'images/char-princess-girl.png'
     ]);
     Resources.onReady(init);
 
@@ -184,4 +254,6 @@ var Engine = (function(global) {
      * from within their app.js files.
      */
     global.ctx = ctx;
+    global.player = player;
+    global.doc = doc;
 })(this);
