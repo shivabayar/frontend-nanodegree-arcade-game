@@ -25,11 +25,11 @@ const Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
-        allEnemies = [new Enemy(0, 1*83-centeringConstant),
-            new Enemy(0, 2*83-centeringConstant),
-            new Enemy(0, 3*83-centeringConstant)],
         player = new Player(3,5);
-    let lastTime;
+    let lastTime, allEnemies = [new Enemy(0, getRandomInt(1, 3)*83-centeringConstant)];
+    setTimeout(function() {
+        allEnemies.push(new Enemy(0, getRandomInt(1, 3)*83-centeringConstant));
+    }, getRandomInt(1000, 8000));
 
     canvas.width = 505;
     canvas.height = 606;
@@ -154,7 +154,14 @@ const Engine = (function(global) {
      */
     function updateEntities(dt) {
         allEnemies.forEach(function(enemy) {
-            enemy.update(dt);
+            const x = enemy.update(dt);
+            if(x === -1) {
+                debugger;
+                allEnemies.splice(allEnemies.indexOf(enemy), 1);
+                setTimeout(function() {
+                    allEnemies.push(new Enemy(0, getRandomInt(1,3)*83-centeringConstant));
+                }, getRandomInt(1000,5000));
+            }
         });
         player.update(ctx);
     }
